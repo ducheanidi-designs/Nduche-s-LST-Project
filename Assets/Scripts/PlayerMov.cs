@@ -10,6 +10,7 @@ public class PlayerMov : MonoBehaviour
 
   [SerializeField] private float weaponDamage;
   [SerializeField] private ParticleSystem muzzleFlash;
+    [SerializeField] private GameObject impact;
 
   [SerializeField] private PlayerInput playerInput;
   [SerializeField] private InputAction moveAction;
@@ -22,6 +23,16 @@ public class PlayerMov : MonoBehaviour
   [SerializeField] private Animator anim;
 
   [SerializeField] private Transform debugSphere;
+
+  [SerializeField] private float fireRate;
+
+
+
+
+
+
+
+  private float nextTimeToFire;
 
   private float xRotation = 0f;
 
@@ -53,25 +64,38 @@ public class PlayerMov : MonoBehaviour
     Vector2 screenCenter = new Vector2(Screen.width/2f, Screen.height/2f);
 
     Ray ray = Camera.main.ScreenPointToRay(screenCenter);
-    
-    if (attackAction.WasPressedThisFrame())
-    {
-      muzzleFlash.Play();
-      if (Physics.Raycast(ray, out RaycastHit hitInfo, 999f))
+
+    if (Physics.Raycast(ray, out RaycastHit hitInfo, 999f))
       {
         debugSphere.position = hitInfo.point;
         Debug.DrawLine(Camera.main.transform.position, hitInfo.point, Color.red);
+      }
+    
+    if (attackAction.WasPressedThisFrame())
+    {
+      nextTimeToFire = Time.time + 1/fireRate;
 
-        EnemyHealth enemyHealth = hitInfo.collider.GetComponent<EnemyHealth>();
+      Shoot (ray);
+    }
+
+  }
+
+    void Shoot (Ray ray)
+    {
+      muzzleFlash.Play();
+      if (Physics. Raycast(ray, out RaycastHit hitInfo, 999f))
+      {
+         EnemyHealth enemyHealth = hitInfo.collider.GetComponent<EnemyHealth>();
 
         if (enemyHealth != null)
         {
           enemyHealth.TakeDamage(weaponDamage); 
+          Instantiate(impact, hitInfo.point, Quaternion.LookRotation(hitInfo.normal));
         }
       }
     }
 
-  }
+    
 
   void HandleRotation()
   {
