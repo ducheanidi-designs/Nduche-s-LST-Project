@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using UnityEngine.InputSystem;
+using TMPro;
 
 public class PlayerMov : MonoBehaviour
 {
@@ -10,7 +11,7 @@ public class PlayerMov : MonoBehaviour
 
   [SerializeField] private float weaponDamage;
   [SerializeField] private ParticleSystem muzzleFlash;
-    [SerializeField] private GameObject impact;
+  [SerializeField] private GameObject impact;
 
   [SerializeField] private PlayerInput playerInput;
   [SerializeField] private InputAction moveAction;
@@ -25,11 +26,10 @@ public class PlayerMov : MonoBehaviour
   [SerializeField] private Transform debugSphere;
 
   [SerializeField] private float fireRate;
-
-
-
-
-
+  [SerializeField] private int maxAmmo;
+  [SerializeField] private int ammo;
+  [SerializeField] private TextMeshProUGUI ammoText;
+  [SerializeField] private float coolDownTime;
 
 
   private float nextTimeToFire;
@@ -40,6 +40,8 @@ public class PlayerMov : MonoBehaviour
   {
     Cursor.lockState = CursorLockMode.Locked;
 
+    ammo = maxAmmo;
+
     moveAction = playerInput.actions["Move"];
     lookAction = playerInput.actions["Look"];
     attackAction = playerInput.actions["Attack"];
@@ -47,6 +49,8 @@ public class PlayerMov : MonoBehaviour
 
   void Update()
   {
+    ammoText.text = ammo.ToString();
+
     Vector2 inputVector = moveAction.ReadValue<Vector2>();
 
     anim.SetFloat("InputX", inputVector.x);
@@ -82,16 +86,23 @@ public class PlayerMov : MonoBehaviour
 
     void Shoot (Ray ray)
     {
-      muzzleFlash.Play();
-      if (Physics. Raycast(ray, out RaycastHit hitInfo, 999f))
+      if (ammo > 0)
       {
-         EnemyHealth enemyHealth = hitInfo.collider.GetComponent<EnemyHealth>();
-
-        if (enemyHealth != null)
+         ammo -= 1;
+         muzzleFlash.Play();
+        if (Physics. Raycast(ray, out RaycastHit hitInfo, 999f))
         {
-          enemyHealth.TakeDamage(weaponDamage); 
           Instantiate(impact, hitInfo.point, Quaternion.LookRotation(hitInfo.normal));
+          EnemyHealth enemyHealth = hitInfo.collider.GetComponentInParent<EnemyHealth>();
+
+          if (enemyHealth != null)
+          {
+            enemyHealth.TakeDamage(weaponDamage); 
+          }
         }
+      } else
+      {
+        StartCoroutine(CoolDown(coolDownTime));
       }
     }
 
@@ -114,6 +125,12 @@ public class PlayerMov : MonoBehaviour
     xRotation = Mathf. Clamp(xRotation, -pitchClampValue.x, pitchClampValue.y);
     camTarget.rotation = Quaternion.Euler(xRotation, camYaw, 0f);
   }
+
+  IEnumerator CoolDown(float waitTime)
+    {
+        yield return new WaitForSeconds(waitTime);
+        ammo = maxAmmo;
+    }
 
 }
 
