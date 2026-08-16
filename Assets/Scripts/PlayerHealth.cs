@@ -8,6 +8,9 @@ public class PlayerHealth : MonoBehaviour
     [SerializeField] private float currentHealth;
     
     [SerializeField] private Image healthSlider;
+
+    [SerializeField] private PlayerMov player;
+
        
 
 
@@ -26,7 +29,15 @@ public class PlayerHealth : MonoBehaviour
 
         if (currentHealth <= 0f)
         {
+            AudioManager.instance.Play("Death");
+
             Debug.Log("Player dead");
+        }
+
+           if (currentHealth <= 0f)
+        {
+            player.isAlive = false;
+            player.Die();
         }
 
        

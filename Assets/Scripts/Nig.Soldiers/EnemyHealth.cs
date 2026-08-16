@@ -11,6 +11,8 @@ public class EnemyHealth : MonoBehaviour
 
     [SerializeField] private Image healthBar;
 
+    [SerializeField] private EnemyMov enemy;
+
 
     private void Start()
     {
@@ -26,15 +28,16 @@ public class EnemyHealth : MonoBehaviour
 
         if (currentHealth <= 0)
         {
+            AudioManager.instance.Play("Death");
             StartCoroutine(Die());
         }
     }
 
     IEnumerator Die()
     {
-        Instantiate(explode, transform.position, Quaternion.identity);
+        enemy.Die();
 
-        yield return new WaitForSeconds(.1f);
+        yield return new WaitForSeconds(5f);
 
         gameObject.SetActive(false);
 

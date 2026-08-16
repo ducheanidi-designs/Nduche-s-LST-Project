@@ -36,6 +36,10 @@ public class PlayerMov : MonoBehaviour
 
   private float xRotation = 0f;
 
+  int die;
+
+  public bool isAlive;
+
   void Start()
   {
     Cursor.lockState = CursorLockMode.Locked;
@@ -45,6 +49,11 @@ public class PlayerMov : MonoBehaviour
     moveAction = playerInput.actions["Move"];
     lookAction = playerInput.actions["Look"];
     attackAction = playerInput.actions["Attack"];
+
+    die = Animator.StringToHash("Die");
+
+    isAlive = true;
+
   }
 
   void Update()
@@ -53,13 +62,26 @@ public class PlayerMov : MonoBehaviour
 
     Vector2 inputVector = moveAction.ReadValue<Vector2>();
 
+    if (inputVector.magnitude > 0)
+        {
+    AudioManager.instance.Play("Running");
+    }
+    else
+    {
+       AudioManager.instance.Stop("Running");
+    }
+
     anim.SetFloat("InputX", inputVector.x);
     anim.SetFloat("InputY", inputVector.y);
 
+    if(isAlive)
+    {
     inputVector = inputVector.normalized;
 
     Vector3 movDir = transform.right * inputVector.x + transform.forward * inputVector.y;
     transform.position += movDir * moveSpeed * Time.deltaTime;
+
+    Vector2 lookInput = lookAction.ReadValue<Vector2>();
 
     //Rotate the player
     HandleRotation();
@@ -75,11 +97,11 @@ public class PlayerMov : MonoBehaviour
         Debug.DrawLine(Camera.main.transform.position, hitInfo.point, Color.red);
       }
     
-    if (attackAction.WasPressedThisFrame())
-    {
-      nextTimeToFire = Time.time + 1/fireRate;
-
-      Shoot (ray);
+      if (attackAction.IsPressed() && Time.time >= nextTimeToFire)
+            {
+                nextTimeToFire = Time.time + 1/fireRate;
+                Shoot(ray);
+          }
     }
 
   }
@@ -90,10 +112,12 @@ public class PlayerMov : MonoBehaviour
       {
          ammo -= 1;
          muzzleFlash.Play();
+         AudioManager.instance.PlayOneShot("Shoot");
         if (Physics. Raycast(ray, out RaycastHit hitInfo, 999f))
         {
           Instantiate(impact, hitInfo.point, Quaternion.LookRotation(hitInfo.normal));
           EnemyHealth enemyHealth = hitInfo.collider.GetComponentInParent<EnemyHealth>();
+
 
           if (enemyHealth != null)
           {
@@ -106,7 +130,10 @@ public class PlayerMov : MonoBehaviour
       }
     }
 
-    
+  public void Die()
+  {
+    anim.CrossFade(die, .025f);
+  }
 
   void HandleRotation()
   {

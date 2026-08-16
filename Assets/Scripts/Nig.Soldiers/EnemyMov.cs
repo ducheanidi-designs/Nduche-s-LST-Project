@@ -7,7 +7,7 @@ public class EnemyMov : MonoBehaviour
     [SerializeField] private Transform target;
     [SerializeField] private NavMeshAgent agent;
 
-    [SerializeField] private Transform[] wayPoints;
+    [SerializeField] private GameObject[] wayPoints;
 
     [SerializeField] private bool inRange;
 
@@ -41,63 +41,78 @@ public class EnemyMov : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        isAlive = true;
         randNum = Random.Range(0, wayPoints.Length);
+        target = GameObject.Find("Player").transform;
+
+        wayPoints = GameObject.FindGameObjectsWithTag("WP");
+
+        die = Animator.StringToHash("Die");
+
+        player = FindFirstObjectByType<PlayerMov>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        ray = new Ray(transform.position, transform.forward); 
-
-        
-        CheckPlayerDis();
-        wayP = randNum;
-
-        dis = Vector3.Distance (transform.position, wayPoints[wayP].transform.position);
-
-        if (!inRange)
+        if (player.isAlive == true)
         {
-            anim.SetFloat("InputY", 1f);
-            agent.SetDestination(wayPoints[wayP].position);
-            
-
-        if (dis < 5)
-        {
-        Debug.Log("Turn");
-        randNum = Random.Range(0, wayPoints.Length);
-
-                // if(wayP == wayPoints.Length)
-                // {
-                //     wayP = 0;
-                // }
-        }
+            CheckPlayerDis();
         }
         else
         {
-            if (Time.time >= nextTimeToFire)
-            {
-                nextTimeToFire =Time.time + 1 / fireRate;
-                Shoot();
-            }
-            
-            agent.SetDestination(target.position);
-            anim.SetFloat("InputY", 1f);
-
-            if (disToPlayer <= agent.stoppingDistance)
-            {
-                anim.SetFloat("InputY", 0f);
-
-                Vector3 tarDir = target.position - transform.position;
-                tarDir.y = 0f;
-                if (tarDir != Vector3.zero)
-                {
-                    Quaternion tarRot = Quaternion.LookRotation(tarDir.normalized);
-                    transform.rotation = Quaternion.RotateTowards(transform.rotation, tarRot, 200f * Time.deltaTime);
-                }
-            }
+            inRange = false;
         }
 
-       
+        if (isAlive == true)
+        {
+            ray = new Ray(transform.position, transform.forward);
+
+
+            wayP = randNum;
+
+            dis = Vector3.Distance(transform.position, wayPoints[wayP].transform.position);
+
+            if (!inRange)
+            {
+                anim.SetFloat("InputY", 1f);
+
+                agent.SetDestination(wayPoints[wayP].transform.position);
+
+                if (dis < 5)
+                {
+                    Debug.Log("Turn");
+                    randNum = Random.Range(0, wayPoints.Length);
+
+                }
+            }
+            else
+            {
+                if (Time.time >= nextTimeToFire)
+                {
+                    nextTimeToFire = Time.time + 1 / fireRate;
+                    Shoot();
+
+                }
+
+                agent.SetDestination(target.position);
+                anim.SetFloat("InputY", 1f);
+
+                if (disToPlayer <= agent.stoppingDistance)
+                {
+                    anim.SetFloat("InputY", 0f);
+
+                    Vector3 tarDir = target.position - transform.position;
+                    tarDir.y = 0f;
+                    if (tarDir != Vector3.zero)
+                    {
+                        Quaternion tarRot = Quaternion.LookRotation(tarDir.normalized);
+                        transform.rotation = Quaternion.RotateTowards(transform.rotation, tarRot, 200f * Time.deltaTime);
+                    }
+                }
+            }
+
+        }
     }
 
     void CheckPlayerDis()
@@ -107,14 +122,22 @@ public class EnemyMov : MonoBehaviour
         if (disToPlayer < 10)
         {
             inRange = true;
-        } else if (disToPlayer >= 25)
+        } 
+        else if (disToPlayer >= 25)
         {
             inRange = false;
         }
     }
     
+    public void Die()
+    {
+        anim.CrossFade(die, .025f);
+    }
+
     void Shoot()
     {
+        AudioManager.instance.PlayOneShot("Shoot");
+
         if (Physics.Raycast(ray, out RaycastHit hit, 999f))
         {
             // Debug.Log(hit.collider.name);
@@ -127,6 +150,7 @@ public class EnemyMov : MonoBehaviour
             {
                 Instantiate(impact, hit.point, Quaternion.LookRotation(hit.normal));
                 playerHealth.TakeDamage(20);
+                Debug.Log ("explode");
             }
         }
     }
