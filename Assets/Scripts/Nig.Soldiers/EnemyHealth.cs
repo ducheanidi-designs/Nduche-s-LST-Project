@@ -29,6 +29,7 @@ public class EnemyHealth : MonoBehaviour
         if (currentHealth <= 0)
         {
             AudioManager.instance.Play("Death");
+            GameManager.instance.RegisterKill();
             StartCoroutine(Die());
         }
     }

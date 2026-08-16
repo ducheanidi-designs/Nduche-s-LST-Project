@@ -31,6 +31,10 @@ public class PlayerHealth : MonoBehaviour
         {
             AudioManager.instance.Play("Death");
 
+            GameManager.instance.EndGame();
+            
+            gameObject.SetActive (false);
+            
             Debug.Log("Player dead");
         }
 
