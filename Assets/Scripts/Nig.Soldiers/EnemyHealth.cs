@@ -13,6 +13,7 @@ public class EnemyHealth : MonoBehaviour
 
     [SerializeField] private EnemyMov enemy;
 
+    private bool isDead = false;
 
     private void Start()
     {
@@ -22,12 +23,15 @@ public class EnemyHealth : MonoBehaviour
     // Update is called once per frame
     public void TakeDamage(float damage)
     {
+        if (isDead) return;
+
         currentHealth -= damage;
 
         healthBar.fillAmount = currentHealth/maxHealth;
 
         if (currentHealth <= 0)
         {
+            isDead = true;
             AudioManager.instance.Play("Death");
             GameManager.instance.RegisterKill();
             StartCoroutine(Die());
@@ -38,7 +42,7 @@ public class EnemyHealth : MonoBehaviour
     {
         enemy.Die();
 
-        yield return new WaitForSeconds(5f);
+        yield return new WaitForSeconds(2.5f);
 
         gameObject.SetActive(false);
 

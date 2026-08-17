@@ -62,20 +62,23 @@ public class PlayerMov : MonoBehaviour
 
     Vector2 inputVector = moveAction.ReadValue<Vector2>();
 
-    if (inputVector.magnitude > 0)
-        {
-    AudioManager.instance.Play("Running");
-    }
-    else
-    {
-       AudioManager.instance.Stop("Running");
-    }
+  
 
     anim.SetFloat("InputX", inputVector.x);
     anim.SetFloat("InputY", inputVector.y);
 
     if(isAlive)
     {
+      if (inputVector.magnitude > 0)
+      {
+        AudioManager.instance.Play("Running");
+      }
+      else
+      {
+        AudioManager.instance.Stop("Running");
+      }
+    }
+
     inputVector = inputVector.normalized;
 
     Vector3 movDir = transform.right * inputVector.x + transform.forward * inputVector.y;
@@ -102,9 +105,7 @@ public class PlayerMov : MonoBehaviour
                 nextTimeToFire = Time.time + 1/fireRate;
                 Shoot(ray);
           }
-    }
-
-  }
+   }
 
     void Shoot (Ray ray)
     {

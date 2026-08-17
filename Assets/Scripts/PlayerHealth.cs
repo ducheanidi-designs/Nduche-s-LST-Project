@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,7 +11,7 @@ public class PlayerHealth : MonoBehaviour
 
     [SerializeField] private PlayerMov player;
 
-       
+    private bool isDead = false;   
 
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -22,28 +23,36 @@ public class PlayerHealth : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
+        if (isDead) return;
+
         currentHealth -= damage;
 
         healthSlider.fillAmount = currentHealth/maxHealth;
 
         if (currentHealth <= 0f)
         {
-            AudioManager.instance.Play("Death");
-
-            GameManager.instance.EndGame();
-            
-            gameObject.SetActive (false);
-            
-            Debug.Log("Player dead");
+            isDead = true;
+            StartCoroutine(Die());
+                        
         }
 
-           if (currentHealth <= 0f)
-        {
-            player.isAlive = false;
-            player.Die();
-        }
+    }
 
-       
+    IEnumerator Die()
+    {
+        Debug.Log("Player death sequence started.");
+        
+        AudioManager.instance.PlayOneShot("Death");
+
+        player.isAlive = false;
+        player.Die();
+
+        yield return new WaitForSecondsRealtime(2.5f);
+
+        gameObject.SetActive(false);
+        GameManager.instance.EndGame();
+
+
     }
 
 }
